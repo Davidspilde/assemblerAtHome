@@ -4,7 +4,8 @@
 #include <stdio.h>
 #include "token.h"
 
+#include "config.h"
 
-TokenArray lex(const char *assembly_code);
+TokenArray lex(Config *asm_config);
 
 #endif

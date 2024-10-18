@@ -68,7 +68,7 @@ Token *_find_next_token(int *line_number)
     }
 }
 
-TokenArray lex()
+TokenArray lex(Config *asm_config)
 {
     /*
     Finds and validates all tokens in given code
@@ -86,6 +86,6 @@ TokenArray lex()
         tokenArray.tokens[tokenArray.size] = *current_token;
         tokenArray.size++;
     }
-    
+
     return tokenArray;
 }
