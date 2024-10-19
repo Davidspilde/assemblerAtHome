@@ -26,14 +26,14 @@ TType _get_token_type(char *token, int token_size, Config *asm_config)
     {
         if (token_size == 1)
         {
-            return INVALID;
+            return UNKNOWN;
         }
         for (int i = 0; i < token_size - 1; i++)
         {
             // check if label contains only alphabets, digits and underscores
             if (!isalpha(token[i]) && !isdigit(token[i]) && token[i] != '_')
             {
-                return INVALID;
+                return UNKNOWN;
             }
         }
         return LABEL;
@@ -48,15 +48,15 @@ TType _get_token_type(char *token, int token_size, Config *asm_config)
             if (token[i] == 'x')
                 hex_char_count++;
             if (!isdigit(token[i]) && token[i] != 'x')
-                return INVALID;
+                return UNKNOWN;
         }
 
         if (hex_char_count > 1)
-            return INVALID;
+            return UNKNOWN;
         return IMM;
     }
 
-    return INVALID;
+    return UNKNOWN;
 }
 
 Token *_find_next_token(int *line_number, Config *asm_config)
@@ -69,7 +69,7 @@ Token *_find_next_token(int *line_number, Config *asm_config)
 
     char lexeme;
     int end_of_token_reached = 0;
-    while ((lexeme = (char)getchar()) != EOF && !end_of_token_reached)
+    while (!end_of_token_reached && (lexeme = (char)getchar()) != EOF)
     {
         switch (lexeme)
         {
@@ -83,6 +83,7 @@ Token *_find_next_token(int *line_number, Config *asm_config)
         case '\n':
             (*line_number)++;
         case ' ':
+        case ',':
         case '\t':
             if (current_token_size > 0)
             {
@@ -96,27 +97,22 @@ Token *_find_next_token(int *line_number, Config *asm_config)
         }
     }
 
+    current_token[current_token_size] = '\0';
+
     if (current_token_size == 0)
     {
         return NULL;
     }
 
     TType token_type = _get_token_type(current_token, current_token_size, asm_config);
-    if (token_type != INVALID)
-    {
-        Token *t = (Token *)malloc(sizeof(Token));
-        t->lexemes = (char *)malloc((current_token_size + 1) * sizeof(char));
-        strcpy(t->lexemes, current_token);
-        t->lexemes[current_token_size] = '\0';
-        t->size = current_token_size;
-        t->ttype = token_type;
-        return t;
-    }
-    else
-    {
-        printf("Invalid token: %s at line: (%d)\n", current_token, *line_number);
-        exit(1);
-    }
+
+    Token *t = (Token *)malloc(sizeof(Token));
+    t->lexemes = (char *)malloc((current_token_size + 1) * sizeof(char));
+    strcpy(t->lexemes, current_token);
+    t->lexemes[current_token_size] = '\0';
+    t->size = current_token_size;
+    t->ttype = token_type;
+    return t;
 }
 
 TokenArray lex(Config *asm_config)

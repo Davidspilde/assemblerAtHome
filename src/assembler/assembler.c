@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <time.h>
 #include "assembler.h"
-#include "lexer.h"
 
 void assemble(char *destPath)
 {
@@ -9,10 +8,11 @@ void assemble(char *destPath)
 
     // pipeline
     // read_asm_config
-    Config *config = read_asm_config("./asm_config/mnemonics", "./asm_config/registers");
+    Config *config = read_asm_config("./src/assembler/asm_config/mnemonics", "./src/assembler/asm_config/registers");
     // read_asm -> lex_asm (generate and confirm tokens)
     TokenArray tokens = lex(config);
-    // -> parse_tokens (validate structure of tokens)
+    // -> parse_tokens (validate structure of tokens and resolve labels)
+    TokenArray parsed_tokens = parse_tokens(tokens, config);
     // -> translate_to_bin (generate machine code from set of tokens)
     // -> write to file
 }

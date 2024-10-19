@@ -7,13 +7,14 @@ typedef enum
     OP,
     IMM,
     LABEL,
-    INVALID
+    UNKNOWN
 } TType;
 
 typedef struct
 {
     char *lexemes;
     int size;
+    int line_number;
     TType ttype;
 } Token;
 
