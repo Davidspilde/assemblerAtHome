@@ -4,10 +4,10 @@
 typedef enum
 {
     INST,
-    OP,
+    REG,
     IMM,
-    LABEL,
-    UNKNOWN
+    DEC_LABEL,
+    LABEL
 } TType;
 
 typedef struct
@@ -15,6 +15,7 @@ typedef struct
     char *lexemes;
     int size;
     int line_number;
+    int address;
     TType ttype;
 } Token;
 
@@ -23,5 +24,12 @@ typedef struct
     Token *tokens;
     int size;
 } TokenArray;
+
+typedef struct
+{
+    char *name;
+    char *address;
+    int defined;
+} LabelValidator;
 
 #endif

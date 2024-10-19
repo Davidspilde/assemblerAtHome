@@ -4,6 +4,6 @@
 #include "token.h"
 #include "config.h"
 
-TokenArray parse_tokens(TokenArray tokens, Config *asm_config);
+void parse_tokens(TokenArray *tokens, Config *asm_config);
 
 #endif

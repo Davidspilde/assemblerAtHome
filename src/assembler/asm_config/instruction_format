@@ -1,0 +1,20 @@
+nop   -> 
+mv    -> RR
+li    -> RI
+ld    -> RI
+ldind -> RR
+stio  -> RRI
+add   -> RIR
+sub   -> RRR
+neg   -> RR
+xor   -> RRR
+nand  -> RRR
+and   -> RRR
+or    -> RRR
+not   -> RR
+j     -> R
+jnz   -> RI
+jimm  -> I
+addi  -> RRI
+st    -> RR
+jz    -> RI
