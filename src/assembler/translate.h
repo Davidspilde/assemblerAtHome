@@ -1,5 +1,5 @@
-#ifndef PARSER_H
-#define PARSER_H
+#ifndef TRANSLATE_H
+#define TRANSLATE_H
 
 #include "token.h"
 #include "config.h"
@@ -7,6 +7,6 @@
 #include <string.h>
 #include <stdio.h>
 
-void parse_tokens(TokenArray *tokens, Config *asm_config);
+void translate(TokenArray *tokens);
 
 #endif

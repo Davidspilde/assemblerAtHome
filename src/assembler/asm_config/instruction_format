@@ -1,10 +1,11 @@
-nop   -> 
+nop   -> N
 mv    -> RR
 li    -> RI
 ld    -> RI
 ldind -> RR
-stio  -> RRI
-add   -> RIR
+ldio  -> RRI
+stio  -> RIR
+add   -> RRR
 sub   -> RRR
 neg   -> RR
 xor   -> RRR

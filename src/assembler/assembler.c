@@ -8,7 +8,10 @@ void assemble(char *destPath)
 
     // pipeline
     // read_asm_config
-    Config *config = read_asm_config("./src/assembler/asm_config/mnemonics", "./src/assembler/asm_config/registers");
+    char *mnemonic_path = "./src/assembler/asm_config/mnemonics";
+    char *register_path = "./src/assembler/asm_config/registers";
+    char *instruction_format_path = "./src/assembler/asm_config/instruction_format";
+    Config *config = read_asm_config(mnemonic_path, register_path, instruction_format_path);
     // read_asm -> lex_asm (generate and confirm tokens)
     TokenArray tokens = lex(config);
     // -> parse_tokens (validate structure of tokens and resolve labels)
