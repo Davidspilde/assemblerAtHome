@@ -9,5 +9,6 @@
 #include "token.h"
 #include "lexer.h"
 #include "parser.h"
+#include "translate.h"
 
 #endif

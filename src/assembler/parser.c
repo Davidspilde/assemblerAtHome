@@ -76,7 +76,6 @@ void _resolve_labels(TokenArray *tokens)
             continue;
 
         int address = _get_label_address(declared_labels, token->lexemes);
-
         if (address == -1)
         {
             fprintf(stderr, "Error: Invalid token %s at line %d\n", token->lexemes, token->line_number);
@@ -86,6 +85,7 @@ void _resolve_labels(TokenArray *tokens)
         token->ttype = IMM;
         token->lexemes = (char *)malloc(100 * sizeof(char));
         token->size = sprintf(token->lexemes, "%d", address);
+        token->data = address;
     }
 }
 
@@ -104,19 +104,21 @@ char *_get_pattern(Token token, Config *asm_config)
     return NULL;
 }
 
-void _validate_tokens(TokenArray *tokens, Config *asm_config)
+
+void _validate_tokens(TokenArray *tokenarr, Config *asm_config)
 {
     // get next pattern
     char *current_pattern = NULL;
     int current_pattern_index = -1;
     int current_pattern_size = -1;
 
-    for (int i = 0; i < tokens->size; i++)
+    for (int i = 0; i < tokenarr->size; i++)
     {
-        Token current_token = tokens->tokens[i];
-
+        Token current_token = tokenarr->tokens[i];
+        current_token.is_last = 0;
         if (current_pattern_index == current_pattern_size)
         {
+            tokenarr->tokens[i-1].is_last = 1;
             current_pattern = NULL;
         }
 

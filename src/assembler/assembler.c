@@ -2,7 +2,7 @@
 #include <time.h>
 #include "assembler.h"
 
-void assemble(char *destPath)
+void assemble(char* dest_path, char* flag)
 {
     time_t start = time(NULL);
 
@@ -18,10 +18,11 @@ void assemble(char *destPath)
     parse_tokens(&tokens, config);
     // -> translate_to_bin (generate machine code from set of tokens)
     // -> write to file
+    translate(&tokens,dest_path, flag[1]);
 }
 
 int main(int argc, char const *argv[])
 {
-    assemble(NULL);
+    assemble(argv[1], argv[2]); 
     return 0;
 }

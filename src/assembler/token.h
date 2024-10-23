@@ -7,7 +7,7 @@ typedef enum
     REG,
     IMM,
     DEC_LABEL,
-    LABEL
+    LABEL,
 } TType;
 
 typedef struct
@@ -17,6 +17,8 @@ typedef struct
     int line_number;
     int address;
     TType ttype;
+    int is_last;
+    int data;
 } Token;
 
 typedef struct

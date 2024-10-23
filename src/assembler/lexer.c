@@ -1,5 +1,7 @@
 #include "lexer.h"
 
+int data;
+
 TType _get_token_type(char *token, int token_size, int *line_number, Config *asm_config)
 {
     /*
@@ -11,36 +13,43 @@ TType _get_token_type(char *token, int token_size, int *line_number, Config *asm
     {
         if (strcmp(token, asm_config->mnemonics[i].name) == 0)
         {
+            data = asm_config->mnemonics[i].binary_representation;
             return INST;
         }
     }
 
-    // check if token is an immediate value
+    // check if token is an immediate value, valid for hex and decimal
     if (isdigit(token[0]))
     {
         int hex_char_count = 0;
-        for (int i = 0; i < token_size; i++)
+        int is_hex = 0;
+        if ((token[0] == '0' && token[1] == 'X'))
         {
-            // if character is a digit then no error
-            // if character is an x and we have seen only one x then no error
-            if (token[i] == 'x' && hex_char_count > 0)
+            // check if rest is hex
+            for (int i = 2; i < token_size; i++)
             {
-                fprintf(stderr, "Error on line: %d, Invalid immediate (%s)", *line_number, token);
-                exit(EXIT_FAILURE);
-            }
-
-            if (token[i] == 'x')
-            {
-                hex_char_count++;
-                continue;
-            }
-
-            if (!isdigit(token[i]))
-            {
-                fprintf(stderr, "Error on line: %d, Invalid immediate (%s)", *line_number, token);
-                exit(EXIT_FAILURE);
+                if (!isxdigit(token[i]))
+                {
+                    fprintf(stderr, "Error on line: %d, Invalid immediate (%s)\n", *line_number, token);
+                    exit(EXIT_FAILURE);
+                }
             }
         }
+        else{
+            // check if rest is digit
+            for (int i = 1; i < token_size; i++)
+            {
+                if (!isdigit(token[i]))
+                {
+                    fprintf(stderr, "Error on line: %d, Invalid immediate (%s)\n", *line_number, token);
+                    exit(EXIT_FAILURE);
+                }
+            }
+        }
+
+        // Convert token to decimal value
+        data = is_hex ? strtol(token, NULL, 16) : atoi(token);
+
         return IMM;
     }
 
@@ -49,6 +58,7 @@ TType _get_token_type(char *token, int token_size, int *line_number, Config *asm
     {
         if (strcmp(token, asm_config->registers[i].name) == 0)
         {
+            data = asm_config->registers[i].binary_representation;
             return REG;
         }
     }
@@ -150,6 +160,7 @@ Token *_find_next_token(int *line_number, Config *asm_config)
     t->size = current_token_size;
     t->ttype = token_type;
     t->line_number = token_line_number;
+    t->data = data;
     return t;
 }
 

@@ -7,6 +7,6 @@
 #include <string.h>
 #include <stdio.h>
 
-void translate(TokenArray *tokens);
+void translate(TokenArray *tokens, char *filename, char flag);
 
 #endif
