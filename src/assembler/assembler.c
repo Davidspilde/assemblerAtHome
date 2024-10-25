@@ -2,8 +2,9 @@
 #include <time.h>
 #include "assembler.h"
 
-void assemble(char* dest_path, char* flag)
+void assemble(char *dest_path, char *flag)
 {
+    // flag is either -b for binary or -h for hex
     time_t start = time(NULL);
 
     // pipeline
@@ -18,11 +19,13 @@ void assemble(char* dest_path, char* flag)
     parse_tokens(&tokens, config);
     // -> translate_to_bin (generate machine code from set of tokens)
     // -> write to file
-    translate(&tokens,dest_path, flag[1]);
+    translate(&tokens, config, dest_path, flag[1]);
+
+    printf("Assembled in %ld seconds\n", time(NULL) - start);
 }
 
 int main(int argc, char const *argv[])
 {
-    assemble(argv[1], argv[2]); 
+    assemble(argv[1], argv[2]);
     return 0;
 }

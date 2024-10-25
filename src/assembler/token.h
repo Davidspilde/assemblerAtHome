@@ -18,7 +18,6 @@ typedef struct
     int address;
     TType ttype;
     int is_last;
-    int data;
 } Token;
 
 typedef struct

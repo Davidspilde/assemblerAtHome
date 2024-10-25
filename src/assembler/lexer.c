@@ -1,7 +1,5 @@
 #include "lexer.h"
 
-int data;
-
 TType _get_token_type(char *token, int token_size, int *line_number, Config *asm_config)
 {
     /*
@@ -13,7 +11,6 @@ TType _get_token_type(char *token, int token_size, int *line_number, Config *asm
     {
         if (strcmp(token, asm_config->mnemonics[i].name) == 0)
         {
-            data = asm_config->mnemonics[i].binary_representation;
             return INST;
         }
     }
@@ -21,9 +18,7 @@ TType _get_token_type(char *token, int token_size, int *line_number, Config *asm
     // check if token is an immediate value, valid for hex and decimal
     if (isdigit(token[0]))
     {
-        int hex_char_count = 0;
-        int is_hex = 0;
-        if ((token[0] == '0' && token[1] == 'X'))
+        if ((token[0] == '0' && (token[1] == 'X' || token[1] == 'x')))
         {
             // check if rest is hex
             for (int i = 2; i < token_size; i++)
@@ -35,7 +30,8 @@ TType _get_token_type(char *token, int token_size, int *line_number, Config *asm
                 }
             }
         }
-        else{
+        else
+        {
             // check if rest is digit
             for (int i = 1; i < token_size; i++)
             {
@@ -48,7 +44,7 @@ TType _get_token_type(char *token, int token_size, int *line_number, Config *asm
         }
 
         // Convert token to decimal value
-        data = is_hex ? strtol(token, NULL, 16) : atoi(token);
+        // data = is_hex ? strtol(token, NULL, 16) : atoi(token);
 
         return IMM;
     }
@@ -58,7 +54,6 @@ TType _get_token_type(char *token, int token_size, int *line_number, Config *asm
     {
         if (strcmp(token, asm_config->registers[i].name) == 0)
         {
-            data = asm_config->registers[i].binary_representation;
             return REG;
         }
     }
@@ -89,6 +84,24 @@ TType _get_token_type(char *token, int token_size, int *line_number, Config *asm
     return LABEL;
 }
 
+void _check_newline(char lexeme, int *line_number, int *should_increment_line_number)
+{
+    /*
+    checks if the lexeme is a newline character
+    */
+    if (lexeme == '\n')
+    {
+        if (*should_increment_line_number)
+        {
+            (*line_number)++;
+        }
+        else
+        {
+            *should_increment_line_number = 1;
+        }
+    }
+}
+
 Token *_find_next_token(int *line_number, Config *asm_config)
 {
     /*
@@ -108,20 +121,15 @@ Token *_find_next_token(int *line_number, Config *asm_config)
         case '#':
         case '/':
             lexeme = getchar();
+            _check_newline(lexeme, line_number, &should_increment_line_number);
             while (lexeme != '\n' && lexeme != EOF && lexeme != '/')
             {
                 lexeme = getchar();
+                _check_newline(lexeme, line_number, &should_increment_line_number);
             }
             break;
         case '\n':
-            if (should_increment_line_number)
-            {
-                (*line_number)++;
-            }
-            else
-            {
-                should_increment_line_number = 1;
-            }
+            _check_newline(lexeme, line_number, &should_increment_line_number);
         case ' ':
         case ',':
         case '\t':
@@ -160,7 +168,6 @@ Token *_find_next_token(int *line_number, Config *asm_config)
     t->size = current_token_size;
     t->ttype = token_type;
     t->line_number = token_line_number;
-    t->data = data;
     return t;
 }
 

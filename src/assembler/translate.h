@@ -7,6 +7,8 @@
 #include <string.h>
 #include <stdio.h>
 
-void translate(TokenArray *tokens, char *filename, char flag);
+#define MAX_WORD_SIZE 16
+
+void translate(TokenArray *tokens, Config *asm_config, char *output_file_path, char flag);
 
 #endif

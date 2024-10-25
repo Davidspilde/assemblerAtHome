@@ -85,17 +85,16 @@ void _resolve_labels(TokenArray *tokens)
         token->ttype = IMM;
         token->lexemes = (char *)malloc(100 * sizeof(char));
         token->size = sprintf(token->lexemes, "%d", address);
-        token->data = address;
     }
 }
 
-char *_get_pattern(Token token, Config *asm_config)
+char *_get_pattern(Token *token, Config *asm_config)
 {
-    if (token.ttype == INST)
+    if (token->ttype == INST)
     {
         for (int i = 0; i < asm_config->instruction_formats_count; i++)
         {
-            if (!strcmp(token.lexemes, asm_config->instruction_formats[i].name))
+            if (!strcmp(token->lexemes, asm_config->instruction_formats[i].name))
             {
                 return asm_config->instruction_formats[i].format;
             }
@@ -104,7 +103,6 @@ char *_get_pattern(Token token, Config *asm_config)
     return NULL;
 }
 
-
 void _validate_tokens(TokenArray *tokenarr, Config *asm_config)
 {
     // get next pattern
@@ -112,14 +110,25 @@ void _validate_tokens(TokenArray *tokenarr, Config *asm_config)
     int current_pattern_index = -1;
     int current_pattern_size = -1;
 
+    Token *last_registry = NULL;
+
     for (int i = 0; i < tokenarr->size; i++)
     {
-        Token current_token = tokenarr->tokens[i];
-        current_token.is_last = 0;
+        Token *current_token = &tokenarr->tokens[i];
+        current_token->is_last = 0;
         if (current_pattern_index == current_pattern_size)
         {
-            tokenarr->tokens[i-1].is_last = 1;
+            if (last_registry != NULL)
+            {
+
+                last_registry->is_last = 1;
+            }
             current_pattern = NULL;
+        }
+
+        if (current_token->ttype == REG)
+        {
+            last_registry = current_token;
         }
 
         if (current_pattern == NULL)
@@ -127,9 +136,9 @@ void _validate_tokens(TokenArray *tokenarr, Config *asm_config)
             char *token_pattern = _get_pattern(current_token, asm_config);
             if (token_pattern == NULL)
             {
-                if (current_token.ttype != DEC_LABEL)
+                if (current_token->ttype != DEC_LABEL)
                 {
-                    fprintf(stderr, "Error: Unexpected token %s at line %d\n", current_token.lexemes, current_token.line_number);
+                    fprintf(stderr, "Error: Unexpected token %s at line %d\n", current_token->lexemes, current_token->line_number);
                     exit(1);
                 }
                 continue;
@@ -147,9 +156,9 @@ void _validate_tokens(TokenArray *tokenarr, Config *asm_config)
 
         TType expected_type = current_pattern[current_pattern_index] == 'R' ? REG : IMM;
 
-        if (current_token.ttype != expected_type)
+        if (current_token->ttype != expected_type)
         {
-            fprintf(stderr, "Error: Unexpected token %s at line %d (expected token of type %s)\n", current_token.lexemes, current_token.line_number, expected_type == REG ? "registry" : "immediate");
+            fprintf(stderr, "Error: Unexpected token %s at line %d (expected token of type %s)\n", current_token->lexemes, current_token->line_number, expected_type == REG ? "registry" : "immediate");
             exit(1);
         }
         current_pattern_index++;

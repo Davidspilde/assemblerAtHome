@@ -1,30 +1,6 @@
 #include "translate.h"
 
-void send_word(char *data, char flag, FILE *file, int r, int address)
-{
-    fill_data(data, 17);
-    if (r)
-    {
-        reverse(data);
-    }
-    fill_data(address, 17);
-    reverse(address);
-    (flag == 'b') ? fwrite(address, 1, 17, file) : fprintf(file, "%x\n", strtol(address, NULL, 2));
-    (flag == 'b') ? fwrite(data, 1, 2, file) : fprintf(file, "%x\n", strtol(data, NULL, 2));
-    data = "";
-}
-
-void int_to_binary_string(int value, char *output, int length)
-{
-    for (int i = length - 1; i >= 0; i--)
-    {
-        output[i] = (value & 1) ? '1' : '0';
-        value >>= 1;
-    }
-    output[length] = '\0'; // Null-terminate the string
-}
-
-void reverse(char *str)
+void _reverse_string(char *str)
 {
     int length = strlen(str);
     for (int i = 0; i < length / 2; i++)
@@ -35,23 +11,89 @@ void reverse(char *str)
     }
 }
 
-void fill_data(char *data, int length)
+void _empty_data(char *data, int length)
 {
-    int current_length = strlen(data);
-    for (int i = current_length; i < length; i++)
+    memset(data, 0, length);
+    data[0] = '\0'; // set null terminator at start
+}
+
+void _pad_data(char *data, int length)
+{
+    int data_length = strlen(data);
+    for (int i = data_length; i < length - 1; i++)
     {
         data[i] = '0';
     }
-    data[length] = '\0'; // Null-terminate the string
+    data[length - 1] = '\0'; // Null-terminate the string
 }
 
-int translateToken(TokenArray *tokenarr, FILE *file, char flag)
+void _send_word(char *data, char flag, FILE *file, int reversed)
 {
-    int start_data = tokenarr->size;
-    int word_fill = 0;
-    char *data = "";
-    int r = 0;
-    int data = 0;
+    _pad_data(data, MAX_WORD_SIZE + 1);
+    if (reversed)
+    {
+        _reverse_string(data);
+    }
+    _pad_data(data, MAX_WORD_SIZE + 1);
+    (flag == 'b') ? fwrite(data, 1, MAX_WORD_SIZE, file) : fprintf(file, "%X", (int)strtol(data, NULL, 2));
+    fwrite("\n", 1, 1, file);
+    _empty_data(data, MAX_WORD_SIZE + 1);
+}
+
+void _int_to_binary_string(int value, char *output, int length)
+{
+    for (int i = length - 1; i >= 0; i--)
+    {
+        output[i] = (value & 1) ? '1' : '0';
+        value >>= 1;
+    }
+    output[length - 1] = '\0'; // Null-terminate the string
+}
+
+char *_registry_to_binary(char *registry, Config *asm_config)
+{
+    for (int i = 0; i < asm_config->registers_count; i++)
+    {
+        if (strcmp(registry, asm_config->registers[i].name) == 0)
+        {
+            return asm_config->registers[i].binary_representation;
+        }
+    }
+    return NULL;
+}
+
+char *_instruction_to_binary(char *instruction, Config *asm_config)
+{
+    for (int i = 0; i < asm_config->mnemonics_count; i++)
+    {
+        if (strcmp(instruction, asm_config->mnemonics[i].name) == 0)
+        {
+            return asm_config->mnemonics[i].binary_representation;
+        }
+    }
+    return NULL;
+}
+
+char *_immediate_to_binary(char *immediate)
+{
+    int is_hex = 0;
+    if (immediate[0] == '0' && (immediate[1] == 'x' || immediate[1] == 'X'))
+    {
+        is_hex = 1;
+    }
+
+    int value = is_hex ? strtol(immediate, NULL, MAX_WORD_SIZE) : atoi(immediate);
+
+    char *binary_immediate = (char *)malloc((MAX_WORD_SIZE + 1) * sizeof(char));
+    _int_to_binary_string(value, binary_immediate, MAX_WORD_SIZE + 1);
+    return binary_immediate;
+}
+
+void _translate(TokenArray *tokenarr, Config *asm_config, FILE *file, char flag)
+{
+    char *data = (char *)malloc((MAX_WORD_SIZE + 1) * sizeof(char)); // word size + 1 for null terminator
+    memset(data, 0, MAX_WORD_SIZE + 1);
+    data[0] = '\0';
     for (int i = 0; i < tokenarr->size; i++)
     {
         Token token = tokenarr->tokens[i];
@@ -59,34 +101,23 @@ int translateToken(TokenArray *tokenarr, FILE *file, char flag)
         switch (token.ttype)
         {
         case REG:
-            char binary_data[4];
-            int_to_binary_string(token.data, binary_data, 4);
+            char *binary_data = _registry_to_binary(token.lexemes, asm_config);
             strcat(data, binary_data);
-            word_fill += 3;
             if (token.is_last)
             {
-                r = 1;
-                send_word(data, flag, file, r, token.address);
-                r = 0;
-                word_fill = 0;
+                _send_word(data, flag, file, 1);
             }
             break;
         case INST:
-            char binary_opcode[6]; // needs 6 because of null terminator
-            int_to_binary_string(token.data, binary_opcode, 6);
+            char *binary_opcode = _instruction_to_binary(token.lexemes, asm_config);
             strcat(data, binary_opcode);
-            word_fill += 5;
+
             break;
         case IMM:
-            if (word_fill > 0)
-            {
-                send_word(data, flag, file, r, token.address);
-            }
-            char binary_immediate[17];
-            int_to_binary_string(token.data, binary_immediate, 17);
+            char *binary_immediate = _immediate_to_binary(token.lexemes);
             strcat(data, binary_immediate);
-            send_word(data, flag, file, r, token.address);
-            word_fill = 0;
+
+            _send_word(data, flag, file, 0);
             break;
         default:
             break;
@@ -94,25 +125,18 @@ int translateToken(TokenArray *tokenarr, FILE *file, char flag)
     }
 }
 
-void translate(TokenArray *tokens, char *filename, char flag)
+void translate(TokenArray *tokens, Config *asm_config, char *output_file_path, char flag)
 {
-    FILE *file = fopen(filename, (flag == 'b') ? "wb" : "w");
+    FILE *file = fopen(output_file_path, (flag == 'b') ? "w" : "w");
     if (file == NULL)
     {
-        printf("Error opening file %s\n", filename);
-        return 1;
+        fprintf(stderr, "Error opening file %s\n", output_file_path);
+        exit(1);
     }
-    if (flag == 'b')
+    if (!(flag == 'b' || flag == 'h'))
     {
-        translateToken(tokens, file, flag); // binary
+        fprintf(stderr, "Error, must include flag -b for binary or -h for hex\n");
+        exit(1);
     }
-    else if (flag == 'h')
-    {
-        translateToken(tokens, file, flag); // hex
-    }
-    else
-    {
-        printf("Must include flag -b for binary or -h for hex\n");
-        EXIT_FAILURE;
-    }
+    _translate(tokens, asm_config, file, flag);
 }

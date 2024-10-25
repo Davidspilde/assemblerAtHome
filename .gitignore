@@ -13,3 +13,4 @@ CMakeUserPresets.json
 obj
 bin
 settings.json
+*.bin
