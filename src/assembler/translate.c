@@ -11,33 +11,47 @@ void _reverse_string(char *str)
     }
 }
 
-void _empty_data(char *data, int length)
+void _allocate_and_initialize(char **field, size_t size)
 {
-    memset(data, 0, length);
-    data[0] = '\0'; // set null terminator at start
+    *field = (char *)malloc((size + 1) * sizeof(char));
+    memset(*field, '0', size);
+    (*field)[size] = '\0';
 }
 
-void _pad_data(char *data, int length)
+void _clear_instruction(Instruction *instruction)
 {
-    int data_length = strlen(data);
-    for (int i = data_length; i < length - 1; i++)
-    {
-        data[i] = '0';
-    }
-    data[length - 1] = '\0'; // Null-terminate the string
+    _allocate_and_initialize(&instruction->immediate, 16);
+    _allocate_and_initialize(&instruction->dest, 3);
+    _allocate_and_initialize(&instruction->srca, 3);
+    _allocate_and_initialize(&instruction->srcb, 3);
+    _allocate_and_initialize(&instruction->opcode, 7);
 }
 
-void _send_word(char *data, char flag, FILE *file, int reversed)
+void _send_word(Instruction *instruction, char flag, FILE *file, int send_immediate)
 {
-    _pad_data(data, MAX_WORD_SIZE + 1);
-    if (reversed)
+
+    char *data = (char *)malloc((MAX_WORD_SIZE + 1) * sizeof(char));
+
+    if (send_immediate)
     {
+        strcpy(data, instruction->immediate);
         _reverse_string(data);
     }
-    _pad_data(data, MAX_WORD_SIZE + 1);
+    else
+    {
+        // print all the variables
+        _reverse_string(instruction->dest);
+        _reverse_string(instruction->srca);
+        _reverse_string(instruction->srcb);
+        strcpy(data, instruction->dest);
+        strcat(data, instruction->srca);
+        strcat(data, instruction->srcb);
+        strcat(data, instruction->opcode);
+    }
+
     (flag == 'b') ? fwrite(data, 1, MAX_WORD_SIZE, file) : fprintf(file, "%X", (int)strtol(data, NULL, 2));
     fwrite("\n", 1, 1, file);
-    _empty_data(data, MAX_WORD_SIZE + 1);
+    _clear_instruction(instruction);
 }
 
 void _int_to_binary_string(int value, char *output, int length)
@@ -47,7 +61,7 @@ void _int_to_binary_string(int value, char *output, int length)
         output[i] = (value & 1) ? '1' : '0';
         value >>= 1;
     }
-    output[length - 1] = '\0'; // Null-terminate the string
+    output[length] = '\0'; // Null-terminate the string
 }
 
 char *_registry_to_binary(char *registry, Config *asm_config)
@@ -85,15 +99,15 @@ char *_immediate_to_binary(char *immediate)
     int value = is_hex ? strtol(immediate, NULL, MAX_WORD_SIZE) : atoi(immediate);
 
     char *binary_immediate = (char *)malloc((MAX_WORD_SIZE + 1) * sizeof(char));
-    _int_to_binary_string(value, binary_immediate, MAX_WORD_SIZE + 1);
+    _int_to_binary_string(value, binary_immediate, MAX_WORD_SIZE);
     return binary_immediate;
 }
 
 void _translate(TokenArray *tokenarr, Config *asm_config, FILE *file, char flag)
 {
-    char *data = (char *)malloc((MAX_WORD_SIZE + 1) * sizeof(char)); // word size + 1 for null terminator
-    memset(data, 0, MAX_WORD_SIZE + 1);
-    data[0] = '\0';
+    Instruction *instruction = (Instruction *)malloc(sizeof(Instruction));
+    _clear_instruction(instruction);
+
     for (int i = 0; i < tokenarr->size; i++)
     {
         Token token = tokenarr->tokens[i];
@@ -102,22 +116,33 @@ void _translate(TokenArray *tokenarr, Config *asm_config, FILE *file, char flag)
         {
         case REG:
             char *binary_data = _registry_to_binary(token.lexemes, asm_config);
-            strcat(data, binary_data);
+            switch (token.registry_type)
+            {
+            case 'D':
+                strcpy(instruction->dest, binary_data);
+                break;
+            case 'A':
+                strcpy(instruction->srca, binary_data);
+                break;
+            case 'B':
+                strcpy(instruction->srcb, binary_data);
+                break;
+            }
             if (token.is_last)
             {
-                _send_word(data, flag, file, 1);
+                _send_word(instruction, flag, file, 0);
             }
             break;
         case INST:
             char *binary_opcode = _instruction_to_binary(token.lexemes, asm_config);
-            strcat(data, binary_opcode);
+            memcpy(instruction->opcode, binary_opcode, strlen(binary_opcode));
 
             break;
         case IMM:
             char *binary_immediate = _immediate_to_binary(token.lexemes);
-            strcat(data, binary_immediate);
+            strcpy(instruction->immediate, binary_immediate);
 
-            _send_word(data, flag, file, 0);
+            _send_word(instruction, flag, file, 1);
             break;
         default:
             break;

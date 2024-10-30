@@ -154,13 +154,16 @@ void _validate_tokens(TokenArray *tokenarr, Config *asm_config)
             continue;
         }
 
-        TType expected_type = current_pattern[current_pattern_index] == 'R' ? REG : IMM;
+        TType expected_type = current_pattern[current_pattern_index] == 'I' ? IMM : REG;
 
         if (current_token->ttype != expected_type)
         {
             fprintf(stderr, "Error: Unexpected token %s at line %d (expected token of type %s)\n", current_token->lexemes, current_token->line_number, expected_type == REG ? "registry" : "immediate");
             exit(1);
         }
+
+        current_token->registry_type = current_pattern[current_pattern_index];
+
         current_pattern_index++;
     }
 }

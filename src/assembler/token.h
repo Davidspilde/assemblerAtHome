@@ -18,6 +18,7 @@ typedef struct
     int address;
     TType ttype;
     int is_last;
+    char registry_type;
 } Token;
 
 typedef struct
