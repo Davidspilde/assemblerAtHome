@@ -1,6 +1,6 @@
 #include "parser.h"
 
-void _set_token_addresses(TokenArray *tokens)
+int _set_token_addresses(TokenArray *tokens)
 {
     // instructions take one address
     // immediates take one address
@@ -30,6 +30,7 @@ void _set_token_addresses(TokenArray *tokens)
             break;
         }
     }
+    return current_address;
 }
 
 int _get_label_address(TokenArray *declared_labels, char *label)
@@ -168,14 +169,90 @@ void _validate_tokens(TokenArray *tokenarr, Config *asm_config)
     }
 }
 
-void parse_tokens(TokenArray *tokens, Config *asm_config)
+TokenArray *_resolve_virtual_instructions(TokenArray *tokens, VirtualInstructionConfig *virtual_instruction_config)
 {
+    int tokens_required_after_virtual_instruction = 0;
+    int skip_until_next_instruction = 0;
+    for (int i = 0; i < tokens->size; i++)
+    {
+        if (skip_until_next_instruction)
+        {
+            if (tokens->tokens[i].ttype == INST)
+            {
+
+                skip_until_next_instruction = 0;
+            }
+            else
+            {
+                continue;
+            }
+        }
+        int tokens_required = is_virtual_instruction(virtual_instruction_config, tokens->tokens[i].lexemes);
+        if (!tokens_required)
+        {
+            tokens_required_after_virtual_instruction++;
+            continue;
+        }
+        tokens_required_after_virtual_instruction += tokens_required;
+        skip_until_next_instruction = 1; // we dont want to count the parameters of the virtual instruction
+    }
+
+    Token *new_tokens = (Token *)malloc(tokens_required_after_virtual_instruction * sizeof(Token));
+
+    printf("[DEBUG] Total token count: %d\n", tokens_required_after_virtual_instruction);
+
+    int current_token = 0;
+    skip_until_next_instruction = 0;
+    for (int i = 0; i < tokens->size; i++)
+    {
+        if (skip_until_next_instruction)
+        {
+
+            if (tokens->tokens[i].ttype == INST)
+            {
+                skip_until_next_instruction = 0;
+            }
+            else
+            {
+                continue;
+            }
+        }
+        int tokens_required = is_virtual_instruction(virtual_instruction_config, tokens->tokens[i].lexemes);
+        if (!tokens_required)
+        {
+            new_tokens[current_token++] = tokens->tokens[i];
+            continue;
+        }
+
+        TokenArray *translated_tokens = resolve_virtual_instruction(tokens, virtual_instruction_config, i);
+        for (int j = 0; j < translated_tokens->size; j++)
+        {
+            new_tokens[current_token++] = translated_tokens->tokens[j];
+            skip_until_next_instruction = 1;
+        }
+    }
+
+    TokenArray *new_tokens_array = (TokenArray *)malloc(sizeof(TokenArray));
+    new_tokens_array->tokens = new_tokens;
+    new_tokens_array->size = tokens_required_after_virtual_instruction;
+
+    return new_tokens_array;
+}
+
+TokenArray *parse_tokens(TokenArray *tokens, Config *asm_config, VirtualInstructionConfig *virtual_instruction_config)
+{
+    // resolve virtual instructions
+    tokens = _resolve_virtual_instructions(tokens, virtual_instruction_config);
+
     // find address of all tokens
-    _set_token_addresses(tokens);
+    int last_address = _set_token_addresses(tokens);
+    printf("[DEBUG] Last instruction address: %d (decimal)\n", last_address);
 
     // replace all labels with addresses
     _resolve_labels(tokens);
 
     // validate tokens (raises error if something is wrong)
     _validate_tokens(tokens, asm_config);
+
+    return tokens;
 }

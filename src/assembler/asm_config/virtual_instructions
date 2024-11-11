@@ -1,0 +1,4 @@
+sub -> DABC -> {
+    neg CB
+    add DAC
+}

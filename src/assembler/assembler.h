@@ -10,5 +10,6 @@
 #include "lexer.h"
 #include "parser.h"
 #include "translate.h"
+#include "virtual_instruction.h"
 
 #endif

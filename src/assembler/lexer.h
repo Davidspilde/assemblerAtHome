@@ -9,6 +9,6 @@
 
 #include "config.h"
 
-TokenArray lex(Config *asm_config);
+TokenArray *lex(Config *asm_config);
 
 #endif

@@ -6,7 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "virtual_instruction.h"
 
-void parse_tokens(TokenArray *tokens, Config *asm_config);
+TokenArray *parse_tokens(TokenArray *tokens, Config *asm_config, VirtualInstructionConfig *virtual_instruction_config);
 
 #endif

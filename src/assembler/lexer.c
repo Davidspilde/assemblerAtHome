@@ -171,23 +171,23 @@ Token *_find_next_token(int *line_number, Config *asm_config)
     return t;
 }
 
-TokenArray lex(Config *asm_config)
+TokenArray *lex(Config *asm_config)
 {
     /*
     Finds and validates all tokens in given code
     */
 
-    TokenArray tokenArray;
-    tokenArray.size = 0;
-    tokenArray.tokens = (Token *)malloc(1000 * sizeof(Token));
+    TokenArray *tokenArray = (TokenArray *)malloc(sizeof(TokenArray));
+    tokenArray->size = 0;
+    tokenArray->tokens = (Token *)malloc(1000 * sizeof(Token));
 
     // find next token
     Token *current_token;
     int line_number = 1;
     while ((current_token = _find_next_token(&line_number, asm_config)) != NULL)
     {
-        tokenArray.tokens[tokenArray.size] = *current_token;
-        tokenArray.size++;
+        tokenArray->tokens[tokenArray->size] = *current_token;
+        tokenArray->size++;
     }
 
     return tokenArray;

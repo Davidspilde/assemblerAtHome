@@ -34,4 +34,14 @@ typedef struct
     int defined;
 } LabelValidator;
 
+typedef struct
+{
+    char *immediate;
+    char *dest;
+    char *srca;
+    char *srcb;
+    char *srcc;
+    char *opcode;
+} Instruction;
+
 #endif

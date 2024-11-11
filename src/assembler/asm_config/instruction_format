@@ -6,7 +6,7 @@ ldind -> DA
 ldio  -> DAI
 stio  -> DAI
 add   -> DAB
-sub   -> DAB
+sub   -> DABC
 neg   -> DA
 xor   -> DAB
 nand  -> DAB

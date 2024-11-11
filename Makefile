@@ -9,8 +9,8 @@ OBJDIR = ./obj
 BINDIR = ./bin
 
 # Files
-SOURCES = $(SRCDIR)/assembler.c $(SRCDIR)/config.c $(SRCDIR)/lexer.c $(SRCDIR)/parser.c $(SRCDIR)/translate.c
-OBJECTS = $(OBJDIR)/assembler.o $(OBJDIR)/config.o $(OBJDIR)/lexer.o $(OBJDIR)/parser.o $(OBJDIR)/translate.o
+SOURCES = $(SRCDIR)/assembler.c $(SRCDIR)/config.c $(SRCDIR)/lexer.c $(SRCDIR)/parser.c $(SRCDIR)/translate.c $(SRCDIR)/virtual_instruction.c
+OBJECTS = $(OBJDIR)/assembler.o $(OBJDIR)/config.o $(OBJDIR)/lexer.o $(OBJDIR)/parser.o $(OBJDIR)/translate.o $(OBJDIR)/virtual_instruction.o
 EXECUTABLE = $(BINDIR)/assembler.exe
 
 # Targets

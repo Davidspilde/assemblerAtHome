@@ -127,6 +127,9 @@ void _translate(TokenArray *tokenarr, Config *asm_config, FILE *file, char flag)
             case 'B':
                 strcpy(instruction->srcb, binary_data);
                 break;
+            case 'C':
+                strcpy(instruction->srcc, binary_data);
+                break;
             }
             if (token.is_last)
             {
@@ -134,6 +137,14 @@ void _translate(TokenArray *tokenarr, Config *asm_config, FILE *file, char flag)
             }
             break;
         case INST:
+            // nop is a special case
+            if (strcmp(token.lexemes, "nop") == 0)
+            {
+                _clear_instruction(instruction);
+                _send_word(instruction, flag, file, 0);
+                break;
+            }
+
             char *binary_opcode = _instruction_to_binary(token.lexemes, asm_config);
             memcpy(instruction->opcode, binary_opcode, strlen(binary_opcode));
 
@@ -150,7 +161,7 @@ void _translate(TokenArray *tokenarr, Config *asm_config, FILE *file, char flag)
     }
 }
 
-void translate(TokenArray *tokens, Config *asm_config, char *output_file_path, char flag)
+void translate(TokenArray *tokens, Config *asm_config, const char *output_file_path, const char flag)
 {
     FILE *file = fopen(output_file_path, (flag == 'b') ? "w" : "w");
     if (file == NULL)
@@ -162,6 +173,14 @@ void translate(TokenArray *tokens, Config *asm_config, char *output_file_path, c
     {
         fprintf(stderr, "Error, must include flag -b for binary or -h for hex\n");
         exit(1);
+    }
+    if (flag == 'h')
+    {
+        printf("[DEBUG] Writing to hex file\n");
+    }
+    else if (flag == 'b')
+    {
+        printf("[DEBUG] Writing to binary file\n");
     }
     _translate(tokens, asm_config, file, flag);
 }
