@@ -117,7 +117,7 @@ void _validate_tokens(TokenArray *tokenarr, Config *asm_config)
     {
         Token *current_token = &tokenarr->tokens[i];
         current_token->is_last = 0;
-        if (current_pattern_index == current_pattern_size)
+        if (current_pattern_index == current_pattern_size && current_pattern != NULL)
         {
             if (last_registry != NULL)
             {
@@ -166,6 +166,12 @@ void _validate_tokens(TokenArray *tokenarr, Config *asm_config)
         current_token->registry_type = current_pattern[current_pattern_index];
 
         current_pattern_index++;
+    }
+
+    // account for last instruction
+    if (last_registry != NULL)
+    {
+        last_registry->is_last = 1;
     }
 }
 

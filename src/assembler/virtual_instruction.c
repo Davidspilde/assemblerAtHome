@@ -181,7 +181,17 @@ TokenArray *resolve_virtual_instruction(TokenArray *tokens, VirtualInstructionCo
         for (int j = 0; j < strlen(instruction.format); j++)
         {
             VirtualInstructionParameter parameter = _get_virtual_instruction_parameter(parameters, number_of_parameters, instruction.format[j]);
-            translated_tokens->tokens[current_token++] = parameter.token;
+            Token *temp_token = (Token *)malloc(sizeof(Token));
+            memccpy(temp_token, &parameter.token, sizeof(Token), sizeof(Token));
+            if (j == strlen(instruction.format) - 1)
+            {
+                temp_token->is_last = 1;
+            }
+            else
+            {
+                temp_token->is_last = 0;
+            }
+            translated_tokens->tokens[current_token++] = *temp_token;
         }
     }
 

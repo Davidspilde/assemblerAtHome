@@ -1,4 +1,6 @@
 # cursed bubble sort of an array with 5 elements
+
+li r0, 64
 li r0, 5 # array size
 li r7, 0x1000 # array address
 
