@@ -30,6 +30,7 @@ void assemble(const char *dest_path, const char *flag)
 
 int main(int argc, char const *argv[])
 {
+    fprintf("Assembling %s to %s\n", argv[1], argv[2]);
     assemble(argv[1], argv[2]);
     return 0;
 }

@@ -24,5 +24,15 @@ $(EXECUTABLE): $(OBJECTS) | $(BINDIR)
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Ensure directories exist
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
+
+$(BINDIR):
+	mkdir -p $(BINDIR)
 
 .PHONY: all clean
+
+# Clean up generated files
+clean:
+	rm -rf $(OBJDIR) $(BINDIR)
