@@ -148,6 +148,13 @@ void _translate(TokenArray *tokenarr, Config *asm_config, FILE *file, char flag)
             char *binary_opcode = _instruction_to_binary(token.lexemes, asm_config);
             memcpy(instruction->opcode, binary_opcode, strlen(binary_opcode));
 
+            // jimm is also a special case
+            if (strcmp(token.lexemes, "jimm") == 0)
+            {
+                _send_word(instruction, flag, file, 0);
+                break;
+            }
+
             break;
         case IMM:
             char *binary_immediate = _immediate_to_binary(token.lexemes);

@@ -181,9 +181,10 @@ TokenArray *_resolve_virtual_instructions(TokenArray *tokens, VirtualInstruction
     int skip_until_next_instruction = 0;
     for (int i = 0; i < tokens->size; i++)
     {
+
         if (skip_until_next_instruction)
         {
-            if (tokens->tokens[i].ttype == INST)
+            if (tokens->tokens[i].ttype == INST || tokens->tokens[i].ttype == DEC_LABEL)
             {
 
                 skip_until_next_instruction = 0;
@@ -214,7 +215,7 @@ TokenArray *_resolve_virtual_instructions(TokenArray *tokens, VirtualInstruction
         if (skip_until_next_instruction)
         {
 
-            if (tokens->tokens[i].ttype == INST)
+            if (tokens->tokens[i].ttype == INST || tokens->tokens[i].ttype == DEC_LABEL)
             {
                 skip_until_next_instruction = 0;
             }
@@ -257,8 +258,12 @@ TokenArray *parse_tokens(TokenArray *tokens, Config *asm_config, VirtualInstruct
     // replace all labels with addresses
     _resolve_labels(tokens);
 
+    printf("[DEBUG] Resolved labels\n");
+
     // validate tokens (raises error if something is wrong)
     _validate_tokens(tokens, asm_config);
+
+    printf("[DEBUG] Validated tokens\n");
 
     return tokens;
 }

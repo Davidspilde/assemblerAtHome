@@ -34,6 +34,7 @@ VirtualInstructionLengths *_count_virtual_instructions(char *path)
             }
             virtual_instruction_lengths->instruction_lengths = realloc(virtual_instruction_lengths->instruction_lengths, number_of_virtual_instructions * sizeof(int));
             virtual_instruction_lengths->instruction_lengths[number_of_virtual_instructions - 1] = current_virtual_instruction_length - 1;
+            current_virtual_instruction_length = 0;
             skip_newline = 1;
             continue;
         default:
@@ -56,6 +57,11 @@ VirtualInstruction *_read_virtual_instructions(char *path, VirtualInstructionLen
     {
         char *op_code = (char *)malloc(100 * sizeof(char));
         char *parameters = (char *)malloc(100 * sizeof(char));
+
+        if (i > 0)
+        {
+            fscanf(file, "}\n");
+        }
 
         fscanf(file, "%s", op_code);
         fscanf(file, "->");
@@ -163,8 +169,10 @@ TokenArray *resolve_virtual_instruction(TokenArray *tokens, VirtualInstructionCo
     for (int i = 0; i < number_of_parameters; i++)
     {
         Token token = tokens->tokens[offset + i + 1]; // skip the virtual instruction itself (could segfault if the user doesn't provide enough parameters)
-        VirtualInstructionParameter parameter = {virtual_instruction->parameters[i], token};
-        parameters[i] = parameter;
+        VirtualInstructionParameter *parameter = (VirtualInstructionParameter *)malloc(sizeof(VirtualInstructionParameter));
+        parameter->param = virtual_instruction->parameters[i];
+        parameter->token = token;
+        parameters[i] = *parameter;
     }
 
     // translate the virtual instruction
@@ -173,7 +181,7 @@ TokenArray *resolve_virtual_instruction(TokenArray *tokens, VirtualInstructionCo
     {
         InstructionFormat instruction = virtual_instruction->instructions[i];
         Token *token = (Token *)malloc(sizeof(Token));
-        memccpy(token, &tokens->tokens[offset], sizeof(Token), sizeof(Token)); // copy the virtual instruction itself but change the op code (to keep the line number)
+        memcpy(token, &tokens->tokens[offset], sizeof(Token)); // copy the virtual instruction itself but change the op code (to keep the line number)
         token->lexemes = instruction.name;
 
         translated_tokens->tokens[current_token++] = *token;
@@ -182,7 +190,7 @@ TokenArray *resolve_virtual_instruction(TokenArray *tokens, VirtualInstructionCo
         {
             VirtualInstructionParameter parameter = _get_virtual_instruction_parameter(parameters, number_of_parameters, instruction.format[j]);
             Token *temp_token = (Token *)malloc(sizeof(Token));
-            memccpy(temp_token, &parameter.token, sizeof(Token), sizeof(Token));
+            memcpy(temp_token, &parameter.token, sizeof(Token));
             if (j == strlen(instruction.format) - 1)
             {
                 temp_token->is_last = 1;
